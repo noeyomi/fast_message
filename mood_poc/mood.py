@@ -1,5 +1,6 @@
 from textblob import TextBlob
 from textblob.sentiments import NaiveBayesAnalyzer, PatternAnalyzer
+from textblob.en.taggers import NLTKTagger, PatternTagger
 from textblob_fr import PatternAnalyzer as PatternAnalyzerFr
 from textblob import exceptions
 import numpy as np
@@ -53,8 +54,30 @@ def getFeeling(text):
     result = np.average(popArray, weights=weights)
     return result
 
+def spellCheck(text):
+    language = getLanguage(text)
+    b = TextBlob(text, pos_tagger=PatternTagger())
+    for word in b.words:
+        print(word)
+        print(word.spellcheck())
+
+def polarityToMood(polarity):
+    tab = {
+        "happy": 0.5,
+        "neutral": 0,
+        "sad": -0.5,
+    }
+    selected = None
+    for key in tab:
+        if (not selected):
+            selected = key
+        elif (abs(tab[key] - polarity) < abs(tab[selected] - polarity)):
+            selected = key
+    return selected
+
 if __name__=="__main__":
     text = '''
-    Salut les amis
+    Je suis content
     '''
-    print(getFeeling(text))
+    p = getFeeling(text)
+    print(polarityToMood(p))
