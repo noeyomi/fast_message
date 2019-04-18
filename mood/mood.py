@@ -4,6 +4,7 @@ from textblob.en.taggers import NLTKTagger, PatternTagger
 from textblob_fr import PatternAnalyzer as PatternAnalyzerFr
 from textblob import exceptions
 import numpy as np
+from threading import Thread
 
 def tradFeelingNaiv(text, analyzer=NaiveBayesAnalyzer()):
     b = TextBlob(text)
@@ -13,7 +14,7 @@ def tradFeelingNaiv(text, analyzer=NaiveBayesAnalyzer()):
     except exceptions.NotTranslated:
         pass
     b = TextBlob(str(translatedText), analyzer=analyzer)
-    return {"polarity": b.sentiment.p_pos - b.sentiment.p_neg}
+    return {"polarity": b.sentiment.p_pos - b.sentiment.p_neg, "language": "en"}
 
 def tradFeelingPattern(text, analyzer=PatternAnalyzer()):
     b = TextBlob(text)
@@ -23,25 +24,35 @@ def tradFeelingPattern(text, analyzer=PatternAnalyzer()):
     except exceptions.NotTranslated:
         pass
     b = TextBlob(str(translatedText), analyzer=analyzer)
-    return {"polarity": b.polarity}
+    return {"polarity": b.polarity, "language": "en"}
 
 def frFeeling(text, analyzer=PatternAnalyzerFr()):
     b = TextBlob(text, analyzer=analyzer)
-    return {"polarity": b.sentiment[0]}
+    return {"polarity": b.sentiment[0], "language": "fr"}
 
 def getLanguage(text):
     b = TextBlob(text)
     return b.detect_language()
 
-def fetchInfos(text):
+def resToTab(tab, fct, *args, **kwargs):
+    res = fct(*args, **kwargs)
+    tab.append(res)
+
+def fetchInfos(text, fast):
     results = []
-    results.append({"language": "en", **tradFeelingNaiv(text)})
-    results.append({"language": "en", **tradFeelingPattern(text)})
-    results.append({"language": "fr", **frFeeling(text)})
+    threads = []
+    if not fast:
+        threads.append(Thread(target=resToTab, args=(results, tradFeelingNaiv, (text))))
+    threads.append(Thread(target=resToTab, args=(results, tradFeelingPattern, (text))))
+    threads.append(Thread(target=resToTab, args=(results, frFeeling, (text))))
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
     return results
 
-def getFeeling(text):
-    results = fetchInfos(text)
+def getFeeling(text, fast = False):
+    results = fetchInfos(text, fast)
     language = getLanguage(text)
     weights = []
     for analyse in results:
@@ -79,5 +90,5 @@ if __name__=="__main__":
     text = '''
     Je suis content
     '''
-    p = getFeeling(text)
+    p = getFeeling(text, True)
     print(polarityToMood(p))
