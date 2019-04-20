@@ -39,7 +39,7 @@ const addMessage = async (user, msg) => {
 };
 
 const getMessages = (number = 50, offset = 0) => {
-  return Msg.find().sort('date').limit(number).skip(offset);
+  return Msg.find().sort('-date').limit(number).skip(offset);
 };
 
 module.exports = {

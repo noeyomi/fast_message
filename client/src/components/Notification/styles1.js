@@ -2,6 +2,10 @@ import green from '@material-ui/core/colors/green';
 import amber from '@material-ui/core/colors/amber';
 
 export default theme => ({
+  container: {
+    marginTop: '25px',
+    borderRadius: '100px',
+  },
   success: {
     backgroundColor: green[600],
   },
@@ -9,7 +13,7 @@ export default theme => ({
     backgroundColor: theme.palette.error.dark,
   },
   info: {
-    backgroundColor: theme.palette.primary.dark,
+    backgroundColor: 'grey',
   },
   warning: {
     backgroundColor: amber[700],
